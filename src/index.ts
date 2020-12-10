@@ -14,7 +14,7 @@ const app = express()
 
 app.use(cors());
 app.use(express.json())
-
+app.options('*', cors());
 const server = http.createServer(app);
 const gameServer = new Server({
   server,
