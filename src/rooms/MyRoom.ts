@@ -27,14 +27,14 @@ export class MyRoom extends Room {
       var player = this.state.players.get(client.sessionId);
       player.pos.x = message.x;
       player.pos.y = message.y;
-      this.state.players.set(client.sessionId,player);
+      //this.state.players.set(client.sessionId,player);
     });
 
     this.onMessage(MessageType.MouseWorldPos, (client, message) => {
       var player = this.state.players.get(client.sessionId);
       player.mousePos.x = message.x;
       player.mousePos.y = message.y;
-      this.state.players.set(client.sessionId,player);
+     // this.state.players.set(client.sessionId,player);
     });
 
     this.onMessage(MessageType.Click,(client,message)=>{
@@ -93,6 +93,7 @@ export class MyRoom extends Room {
         this.playerClients.get(player.clientID).send("lose",{});
       }
   });
+  
     this.disconnect();
   }
   onJoin (client: Client, options: any) {
