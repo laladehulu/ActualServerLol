@@ -26,6 +26,7 @@ export class Player extends Schema{
         }
         return false;
     }
+
 }
 
 export class Treasure extends Schema{

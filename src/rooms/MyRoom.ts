@@ -1,9 +1,10 @@
 import { Room, Client } from "colyseus";
 import { json } from "express";
 import { GameState,Player,Treasure } from "./schema/GameState";
-
+import {RespawnCommand,DefeatPlayerCommand} from "../commands/commands"
+import { Dispatcher } from "@colyseus/command";
 export class MyRoom extends Room {
-
+  dispatcher = new Dispatcher(this);
   teamCount = 0;
   authorityClient:Client = null;//let one client (the first who joined) report hit and collision;
   playerCount = 0;
@@ -55,12 +56,12 @@ export class MyRoom extends Room {
 
     this.onMessage(MessageType.Start,(client,m)=>{
       console.log("start ");
-      this.lock();
+    //  this.lock();
       setTimeout(() => {
         this.authorityClient.send("authority",{});//let the authority client report physics
         console.log("send authority");
       }, (500));
-      this.broadcast("start");
+     
     })
     this.onMessage(MessageType.Inventory,(client,message)=>{
      
@@ -76,13 +77,15 @@ export class MyRoom extends Room {
     this.onMessage("name",(client,name)=>{
       this.state.players.get(client.sessionId).name = name;
     })
+    this.onMessage("respawn",(client)=>{
+      this.dispatcher.dispatch(new RespawnCommand(),client.sessionId);
+    })
 
   }
   defeatPlayer(id:string){
-    this.state.alivePlyaer--;
-    if(this.state.alivePlyaer ==1){
-      this.win()
-    }
+    this.dispatcher.dispatch(new DefeatPlayerCommand(),id);
+    //
+
   }
  
   win(){
@@ -118,6 +121,7 @@ export class MyRoom extends Room {
     player.pos.x = Math.random()*3;
     player.pos.y = Math.random()*3;
     this.state.playerCount++;
+    this.broadcast("start");
     this.state.alivePlyaer++;
     this.state.players.set(player.clientID ,player);
   }
