@@ -73,6 +73,9 @@ export class MyRoom extends Room {
       
       console.log("inventory change ");
     })
+    this.onMessage("name",(client,name)=>{
+      this.state.players.get(client.sessionId).name = name;
+    })
 
   }
   defeatPlayer(id:string){
@@ -93,7 +96,6 @@ export class MyRoom extends Room {
         this.playerClients.get(player.clientID).send("lose",{});
       }
   });
-  
     this.disconnect();
   }
   onJoin (client: Client, options: any) {

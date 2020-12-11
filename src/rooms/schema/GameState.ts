@@ -18,6 +18,7 @@ export class Player extends Schema{
     @type("number") health:number = 100;
     @type("number") team:number = 0;
     @type("string") clientID:string;
+    @type("string") name:string;
     @type(Inventory) inventory:Inventory = new Inventory();
     isDefeated(){
         if(this.health<=0){
