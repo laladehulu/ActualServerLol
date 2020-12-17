@@ -8,7 +8,7 @@ import { Dispatcher } from "@colyseus/command";
 
 //import { OnJoinCommand } from "./OnJoinCommand";
 import { MyRoom } from "./rooms/MyRoom";
-
+import { TeamRoom } from "./rooms/TeamRoom";
 const port = Number(process.env.PORT || 5000);
 const app = express()
 
@@ -22,7 +22,7 @@ const gameServer = new Server({
 
 // register your room handlers
 gameServer.define('myRoom', MyRoom);
-
+gameServer.define('teamRoom', TeamRoom);
 /**
  * Register @colyseus/social routes
  *

@@ -1,14 +1,15 @@
 import { Room, Client } from "colyseus";
 import { json } from "express";
-import { GameState,Player,Treasure } from "./schema/GameState";
-import {RespawnCommand,DefeatPlayerCommand} from "../commands/commands"
+import { GameState,Player,Territory,Treasure } from "./schema/GameState";
+import {RespawnCommand,DefeatPlayerCommand,ConquerCommand} from "../commands/commands"
 import { Dispatcher } from "@colyseus/command";
-export class MyRoom extends Room {
+export class TeamRoom extends Room {
   dispatcher = new Dispatcher(this);
   teamCount = 0;
   authorityClient:Client = null;//let one client (the first who joined) report hit and collision;
   playerCount = 0;
-  playerClients = new Map(); 
+  playerClients = new Map();
+  autoDispose = false; 
   onCreate (options: any) {
     var state = new GameState();
     state.playerCount = 0;
@@ -21,7 +22,8 @@ export class MyRoom extends Room {
       Start:4,
       Inventory:5
     }
-
+    state.territories.set("flag_1",new Territory("flag_1"));
+    
     this.setState(state);
 
     this.onMessage(MessageType.Position, (client, message) => {
@@ -46,9 +48,12 @@ export class MyRoom extends Room {
     this.onMessage(MessageType.Attack,(client,message)=>{
       console.log("player health updated");
       console.log("receiver is", message.receiver, "received damage", message.damage)
-      
       var receiver = this.state.players.get(message.receiver);
-
+      var dealer = this.state.players.get(message.dealer);
+      if(receiver.team == dealer.team){
+        console.log("team damage"+receiver.team)
+        return;
+      }
       receiver.health -= message.damage;
       if(receiver.health<=0){
         this.defeatPlayer(client.sessionId);
@@ -58,10 +63,7 @@ export class MyRoom extends Room {
     this.onMessage(MessageType.Start,(client,m)=>{
       console.log("start ");
     //  this.lock();
-      setTimeout(() => {
-        this.authorityClient.send("authority",{});//let the authority client report physics
-        console.log("send authority");
-      }, (500));
+    
      
     })
     this.onMessage(MessageType.Inventory,(client,message)=>{
@@ -82,7 +84,12 @@ export class MyRoom extends Room {
       this.dispatcher.dispatch(new RespawnCommand(),client.sessionId);
     })
     this.onMessage("team",(client,teamName)=>{
+      console.log("change team name",teamName);
       this.state.players.get(client.sessionId).team = teamName;
+    })
+    this.onMessage("conquer",(client,message)=>{
+      //console.log("click");
+      this.dispatcher.dispatch(new ConquerCommand(),{playerID:client.sessionId,flagID:message});
     })
 
   }
@@ -125,7 +132,7 @@ export class MyRoom extends Room {
     player.pos.x = Math.random()*3;
     player.pos.y = Math.random()*3;
     this.state.playerCount++;
-    this.broadcast("start");
+   // this.broadcast("start");
     this.state.alivePlyaer++;
     this.state.players.set(player.clientID ,player);
   }

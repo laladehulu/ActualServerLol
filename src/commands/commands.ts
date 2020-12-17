@@ -34,3 +34,15 @@ export class DefeatPlayerCommand extends Command<GameState, {
 }
 
 }
+export class ConquerCommand extends Command<GameState, { playerID: string, flagID: string } >{
+
+  execute({flagID,playerID}=this["payload"]) {
+  console.log("conquer flag", flagID);
+  if(this.state.players.get(playerID).health<=0){
+    return;
+  };
+  this.state.territories.get(flagID).conquer(this.state.players.get(playerID).team);
+  //tell all clients to remove existing script for a player and instantiate a new instance
+}
+
+}
