@@ -84,8 +84,11 @@ export class MyRoom extends Room {
     this.onMessage("team",(client,teamName)=>{
       this.state.players.get(client.sessionId).team = teamName;
     })
-
+    
+  
+    
   }
+ 
   defeatPlayer(id:string){
     this.dispatcher.dispatch(new DefeatPlayerCommand(),id);
     //

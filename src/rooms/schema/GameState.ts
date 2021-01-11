@@ -1,6 +1,9 @@
 import { Room, Client, generateId } from "colyseus";
 import { Schema, MapSchema, ArraySchema, Context } from "@colyseus/schema";
 import e from "express";
+enum NPCType {
+    S_DeathKnight="S_DeathKnight", S_Warrior="S_Warrior"
+}
 const type = Context.create();
 export class V2 extends Schema{
     @type("number") x: number = 0;
@@ -13,17 +16,39 @@ export class Inventory extends Schema{
     @type("string") equipped:string;
     @type("string") unequipped:string;
 }
+export class NPC extends Schema{
+    constructor(id:string){
+        super();
+        this.npcID = id;
+    }
+    @type(V2) pos:V2 = new V2();
+    @type(V2) mousePos:V2 = new V2();
+ 
+    @type("number") health:number = 100;
+    @type("string") team:string;
+    @type("string") ownerID:string;
+    @type("string") npcID:string;
+    @type("string") type:string= NPCType.S_DeathKnight;
+
+    isDefeated(){
+        if(this.health<=0){
+            return true;
+        }
+        return false;
+    }
+}
 export class Territory extends Schema{
     constructor(id:string){
         super();
         this.id = id;
     }
-    conquer(conquererTeam:string){
+    conquer(conquererTeam:string,changeCb:any){
         if(conquererTeam != this.owner){
             this.conquerPercentage-=3;
             if(this.conquerPercentage<=0){
                 this.owner = conquererTeam;
                 this.conquerPercentage = 1;
+                changeCb(conquererTeam,this.id);
                 return;
             }
         }
@@ -74,4 +99,5 @@ export class GameState extends Schema{
     @type({map: Territory}) territories = new MapSchema<Territory>();
     @type({ array: Treasure }) treasures = new ArraySchema<Treasure>();
     @type({ map: Player }) players = new MapSchema<Player>();
+    @type({ map: NPC }) NPCs = new MapSchema<NPC>();
 }
