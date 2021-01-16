@@ -67,7 +67,7 @@ export class TeamRoom extends Room {
       
       receiver.health -= message.damage;
       if(receiver.health<=0){
-        this.defeatPlayer(client.sessionId);
+        this.defeatPlayer(receiver,dealer);
       }
     })
 
@@ -149,11 +149,15 @@ export class TeamRoom extends Room {
   update (deltaTime:Number) {
 
   }
-  defeatPlayer(id:string){
-    this.dispatcher.dispatch(new DefeatPlayerCommand(),id);
+  defeatPlayer(receiver:Player,Dealer:Player){
+    this.dispatcher.dispatch(new DefeatPlayerCommand(),receiver.clientID);//single responsibility
     //
-
+    Dealer.score = Dealer.score +10;
+    console.log("killfeed");
+    
+    this.broadcast("notification_killfeed", {receiver:receiver.name,dealer:Dealer.name});
   }
+  
  
   win(){
     console.log("game over")
