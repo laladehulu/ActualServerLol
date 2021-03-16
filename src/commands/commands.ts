@@ -1,5 +1,7 @@
 import { Command } from "@colyseus/command";
+import e from "express";
 import {GameState, NPC} from "../rooms/schema/GameState";
+import { Schema, MapSchema, ArraySchema, Context } from "@colyseus/schema";
 var id = 0;
 export class onMoveCommand
  extends Command<GameState, {
@@ -16,9 +18,16 @@ export class AddNPCCommand extends Command<GameState, { ownerID: string, typeID:
 
   execute({ownerID,typeID}=this["payload"]) {
   id++;
+  console.log("new npc added");
   var npc = new NPC(id.toString());
   npc.ownerID = ownerID;
-  npc.team = this.state.players.get(ownerID).team;
+  if(ownerID == "null"){
+    npc.team = "enemy";
+  }
+  else{
+    npc.team = this.state.players.get(ownerID).team;
+  }
+
   npc.type == typeID;//the server is type agonistic, it only matters to the client for instantiation
   this.state.NPCs.set(id.toString(),npc);
   
@@ -32,9 +41,11 @@ export class RespawnCommand extends Command<GameState, {
 
   execute(sessionId:string) {
   console.log("respawn player",sessionId);
+ // console.log(this.state.players.get(sessionId).stat.modifiers);
   this.state.players.get(sessionId).health = 100;
   this.state.players.get(sessionId).pos.x = Math.random()*10;
   this.state.players.get(sessionId).pos.y = Math.random()*10;
+ // this.state.players.get(sessionId).stat.modifiers = new ArraySchema<string>();
   this.room.broadcast("respawn",this.state.players.get(sessionId));//tell all clients to remove existing script for a player and instantiate a new instance
 }
 
@@ -46,6 +57,25 @@ export class DefeatPlayerCommand extends Command<GameState, {
   execute(sessionId:string) {
   console.log("defeat player",sessionId);
   this.room.broadcast("defeat",sessionId);//tell all clients to remove existing script for a player and instantiate a new instance
+}
+
+}
+export class RemoveModifier extends Command<GameState, {
+    playerId:string, modifierId:string
+}> {
+
+  execute({playerId,modifierId}=this["payload"]) {
+  //this.state.players.get(playerId).stat.modifiers.push(modifierId);
+}
+
+}
+export class AddModifier extends Command<GameState, {
+    playerId:string,modifierId:string
+}> {
+
+  execute({playerId,modifierId}=this["payload"]) {
+  console.log("add modifier",modifierId,"to",playerId);
+  //this.state.players.get(playerId).stat.modifiers.push(modifierId);
 }
 
 }

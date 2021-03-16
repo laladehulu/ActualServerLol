@@ -1,7 +1,7 @@
 import { Room, Client } from "colyseus";
 import e, { json } from "express";
 import { GameState,Player,Territory,Treasure, V2 } from "./schema/GameState";
-import {RespawnCommand,NPCHit,DefeatPlayerCommand,ConquerCommand,AddNPCCommand} from "../commands/commands"
+import {RespawnCommand,NPCHit,DefeatPlayerCommand,ConquerCommand,AddNPCCommand, AddModifier, RemoveModifier} from "../commands/commands"
 import { Dispatcher } from "@colyseus/command";
 export class TeamRoom extends Room {
   dispatcher = new Dispatcher(this);
@@ -50,7 +50,7 @@ export class TeamRoom extends Room {
       console.log("click");
       this.broadcast(this.MessageType.Click,{clientID:client.sessionId})
     })
-
+    
     this.onMessage(this.MessageType.Attack,(client,message)=>{
       console.log("player health updated");
       console.log("receiver is", message.receiver, "received damage", message.damage)
@@ -97,6 +97,16 @@ export class TeamRoom extends Room {
     this.onMessage("regular_ability",(client,abilityID)=>{
       this.broadcast("ability",{userID:client.sessionId,abilityID})
     })
+    this.onMessage("add_modifier",(client,message)=>{
+      console.log(message);
+      this.dispatcher.dispatch(new AddModifier(),{playerId:message.playerId,modifierId:message.ModifierId});
+
+    })
+    this.onMessage("remove_modifier",(client,message)=>{
+      //console.log("click");
+      this.dispatcher.dispatch(new RemoveModifier(),{playerId:message.playerId,modifierId:message.ModifierId});
+      
+    })
     this.onMessage("team",(client,team)=>{
       console.log("change team name",team);
       this.state.players.get(client.sessionId).team = team;
@@ -105,16 +115,20 @@ export class TeamRoom extends Room {
       //console.log("click");
       this.dispatcher.dispatch(new ConquerCommand(),{playerID:client.sessionId,flagID:message});
     })
-
-      this.setSimulationInterval((deltaTime) => this.update(deltaTime));
+    this.onMessage("chat-message",(client,message)=>{
+      var senderName = this.state.players.get(client.sessionId).name;
+      this.broadcast("chat-message",{chatsender:senderName,content:message});
+    });
+    this.setSimulationInterval((deltaTime) => this.update(deltaTime));
     this.registerNPC();
   
   
   }
   registerNPC(){
     this.onMessage("new_npc", (clientID,NPCType)=>{
-      this.dispatcher.dispatch(new AddNPCCommand(),{ownerID:clientID.id,typeID:NPCType} );
+      this.dispatcher.dispatch(new AddNPCCommand(),{ownerID:"null",typeID:NPCType} );
     })
+    
     this.onMessage(this.MessageType.NPCPos, (client, NpcPosAndID)=>{
 
       var pos:V2 = new V2();

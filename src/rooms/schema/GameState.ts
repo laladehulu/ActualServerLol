@@ -15,6 +15,7 @@ export class Inventory extends Schema{
     }
     @type("string") equipped:string;
     @type("string") unequipped:string;
+    @type("string") quickaccess:string;
 }
 export class NPC extends Schema{
     constructor(id:string){
@@ -68,6 +69,10 @@ export class Territory extends Schema{
 
     
 }
+export class PlayerStat extends Schema{
+    @type([ "string" ]) modifiers = new ArraySchema<string>();
+    
+}
 export class Player extends Schema{
     @type(V2) pos:V2 = new V2();
     @type(V2) mousePos:V2 = new V2();
@@ -77,6 +82,7 @@ export class Player extends Schema{
     @type("string") name:string;
     @type("number") score: number = 0;
     @type(Inventory) inventory:Inventory = new Inventory();
+    //@type(PlayerStat) stat:PlayerStat = new PlayerStat();
     isDefeated(){
         if(this.health<=0){
             return true;
